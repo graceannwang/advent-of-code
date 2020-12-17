@@ -21,7 +21,7 @@
 (check-expect (line->ch "8-9 x: xxxxxxxrk") #\x)
 
 (: line->first-pos (-> String Integer))
-;; extracts the minimum number of occurences for the policy's letter
+;; extracts the first position of the policy
 (define (line->first-pos ln)
   (cast (string->number (list->string (until-first-ch (string->list ln) #\-)))
         Integer))
@@ -29,7 +29,7 @@
 (check-expect (line->first-pos "8-9 x: xxxxxxxrk") 8)
 
 (: line->second-pos (-> String Integer))
-;; extracts the maximum number of occurences for the policy's letter
+;; extracts the second position of the policy
 (define (line->second-pos ln)
   (cast
    (string->number
