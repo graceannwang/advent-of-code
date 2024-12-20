@@ -3,18 +3,13 @@ const fs = require('node:fs');
 const input = fs.readFileSync('./input.txt', 'utf-8');
 const rows = input.split('\n');
 
-// const PATTERNS = rows[0].split(', ').sort((a, b) => (-1 * (a.length - b.length)));
-// const DESIGNS = rows.splice(2);
-const PATTERNS = ['r', 'wr', 'b', 'g', 'bwu', 'rb', 'gb', 'br'].sort((a, b) => -1 * (a.length - b.length));
-const DESIGNS = ['brwrr',
-    'bggr',
-    'gbbr',
-    'rrbgbr',
-    'ubwu',
-    'bwurrg',
-    'brgr',
-    'bbrgwb']
+const PATTERNS = rows[0].split(', ').sort((a, b) => (-1 * (a.length - b.length)));
+const DESIGNS = rows.splice(2);
 
+// Save design slices which are impossible to construct from PATTERNS. This speeds up the solve.
+const BAD_SLICES = new Set();  
+
+// Helper functions
 function patternAtStartOfDesign(pattern, design) {
     if (pattern.length > design.length) return null; 
 
@@ -27,9 +22,13 @@ function patternAtStartOfDesign(pattern, design) {
 }
 
 function designIsViable(design) {
-    const designSlices = []
+    if (BAD_SLICES.has(design)) return false;
+    
+    const designSlices = [];
+
+    // Check if any p in PATTERNS match the first part of the given design slice
     for (i in PATTERNS) {
-        pattern = PATTERNS[i];
+        const pattern = PATTERNS[i];
 
         const designSlice = patternAtStartOfDesign(pattern, design);
 
@@ -39,15 +38,22 @@ function designIsViable(design) {
         }
     }
 
+    // For all patterns that do match, slice the rest of the design and repeat
+    // This below can be simplified/moved up into the for loop above, but kept for ease of debugging/readability
     for (i in designSlices) {
         const designSlice = designSlices[i];
         const designSliceViability = designIsViable(designSlice);
 
-        if (designSliceViability === true) return true;
+        if (designSliceViability === true) {
+            return true;
+        } else if (designSliceViability === false) {
+            BAD_SLICES.add(designSlice);
+        }
     }
     return false; // design not viable 
 }
 
+// Solve
 function solve() {
     var viableDesigns = [];
 
@@ -56,7 +62,7 @@ function solve() {
         console.log('Solving design: ' + design);
 
         const viability = designIsViable(design);
-        console.log('  ' + viability);
+        console.log(viability);
         viableDesigns.push(viability);
     }
 
@@ -65,4 +71,3 @@ function solve() {
 }
 
 solve();
-// console.log(PATTERNS);
