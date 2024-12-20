@@ -3,17 +3,17 @@ const fs = require('node:fs');
 const input = fs.readFileSync('./input.txt', 'utf-8');
 const rows = input.split('\n');
 
-const PATTERNS = rows[0].split(', ');
-const DESIGNS = rows.splice(2);
-// const PATTERNS = ['r', 'wr', 'b', 'g', 'bwu', 'rb', 'gb', 'br'];
-// const DESIGNS = ['brwrr',
-//     'bggr',
-//     'gbbr',
-//     'rrbgbr',
-//     'ubwu',
-//     'bwurrg',
-//     'brgr',
-//     'bbrgwb']
+// const PATTERNS = rows[0].split(', ').sort((a, b) => (-1 * (a.length - b.length)));
+// const DESIGNS = rows.splice(2);
+const PATTERNS = ['r', 'wr', 'b', 'g', 'bwu', 'rb', 'gb', 'br'].sort((a, b) => -1 * (a.length - b.length));
+const DESIGNS = ['brwrr',
+    'bggr',
+    'gbbr',
+    'rrbgbr',
+    'ubwu',
+    'bwurrg',
+    'brgr',
+    'bbrgwb']
 
 function patternAtStartOfDesign(pattern, design) {
     if (pattern.length > design.length) return null; 
@@ -33,31 +33,31 @@ function designIsViable(design) {
 
         const designSlice = patternAtStartOfDesign(pattern, design);
 
-        if (designSlice === '') return true; // Base case: last pattern in design has been matched
+        if (designSlice === '') return true; // design is viable
         if (designSlice !== null) {
             designSlices.push(designSlice);
         }
     }
 
-    if (designSlices.length === 0) return false; // Base case: nothing matches design pattern
-
-    const viablePaths = []
-
     for (i in designSlices) {
         const designSlice = designSlices[i];
         const designSliceViability = designIsViable(designSlice);
 
-        viablePaths.push(designSliceViability);
+        if (designSliceViability === true) return true;
     }
-
-    return viablePaths.includes(true);
+    return false; // design not viable 
 }
 
 function solve() {
     var viableDesigns = [];
 
     for (i in DESIGNS) {
-        viableDesigns.push(designIsViable(DESIGNS[i]));
+        const design = DESIGNS[i];
+        console.log('Solving design: ' + design);
+
+        const viability = designIsViable(design);
+        console.log('  ' + viability);
+        viableDesigns.push(viability);
     }
 
     const count = viableDesigns.filter(b => b == true).length;
@@ -65,3 +65,4 @@ function solve() {
 }
 
 solve();
+// console.log(PATTERNS);
