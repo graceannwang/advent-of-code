@@ -183,7 +183,6 @@ function solve(inputFilePath, timeThresh) {
     const cheatsInfo = findAllCheats(racemap, traversal);
     const cheatsCounts = getCheatsCounts(cheatsInfo);
 
-    // console.log(cheatsCounts);
     var numTopCheats = 0;
     for (const cheatCount of cheatsCounts) {
         const timeSaved = cheatCount[0];
