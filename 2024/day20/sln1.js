@@ -1,3 +1,8 @@
+const { log } = require('node:console');
+const { deflateRawSync } = require('node:zlib');
+
+const CHEAT_EXPENSE = 2;
+
 // Reads from file input and stores racetrack in 2d array
 function populateRacemap(filename) {
     const fs = require('node:fs');
@@ -85,7 +90,7 @@ function traverse(racemap) {
 }
 
 // Given a racemap, traversal, and point, find cheats for that point
-function findCheats(racemap, traversal, pt) {
+function findCheatsForPt(racemap, traversal, pt) {
     const cheats = []; 
     const firstMoves = getNeighbors(pt, racemap[0].length, racemap.length);
 
@@ -98,7 +103,8 @@ function findCheats(racemap, traversal, pt) {
             for (j in secondMoves) {
                 const secondMove = secondMoves[j];
 
-                if (racemap[secondMove.x][secondMove.y] === '.') {
+                if (racemap[secondMove.x][secondMove.y] === '.' ||
+                    racemap[secondMove.x][secondMove.y] === 'E') {
                     const startTime = traversal.get(JSON.stringify(pt));
                     const endTime = traversal.get(JSON.stringify(secondMove));
                     
@@ -119,16 +125,76 @@ function findCheats(racemap, traversal, pt) {
 }
 
 // Calculate time saved given a cheat and traversal
+function getTimeSaved(cheat, traversal) {
+    const startTime = traversal.get(JSON.stringify(cheat.start));
+    const endTime = traversal.get(JSON.stringify(cheat.end));
 
-// Solve: 
-// Find traversal
-// For each point in traversal, find cheat for each point
-// Calculate time for all cheats
-// Pick top
+    return (endTime - startTime) - CHEAT_EXPENSE; 
+}
 
-const racemap = populateRacemap('test.txt');
-const traversal = traverse(racemap);
-const p = {x: 2, y: 9};
-console.log(findCheats(racemap, traversal, p));
-const b = {x: 0, y: 3};
-// console.log(getNeighbors(b, 5, 5));
+function findAllCheats(racemap, traversal) {
+    const cheats = new Map();
+
+    const keys = traversal.keys();
+    for (const key of keys) {
+        const pt = JSON.parse(key);
+        const ptCheats = findCheatsForPt(racemap, traversal, pt);
+
+        for (i in ptCheats) {
+            const cheat = ptCheats[i];
+            const timeSaved = getTimeSaved(cheat, traversal);
+
+            if (cheats.has(timeSaved)) {
+                cheats.get(timeSaved).push(cheat);
+            } else {
+                cheats.set(timeSaved, [cheat]);
+            }
+        }
+    }
+
+    // Sort cheats based on frequency
+    const sortedCheatsArr = Array.from(cheats).sort((a, b) => b[0] - a[0]);
+    return new Map(sortedCheatsArr);
+}
+
+function getCheatsCounts(cheatsInfo) {
+    const cheatsCounts = new Map();
+
+    for (const cheatInfo of cheatsInfo) {
+        cheatsCounts.set(cheatInfo[0], cheatInfo[1].length);
+    }
+
+    return cheatsCounts;
+}
+
+function logMapElements(value, key, map) {
+    const valueStr = JSON.stringify(value);
+    console.log(`m[${key}] = ${valueStr}\n`);
+}
+
+function logNumCheats(numCheats, secondsSaved, map) {
+    console.log(`There are ${numCheats} cheats that save ${secondsSaved} picoseconds.`);
+}
+
+function solve(inputFilePath, timeThresh) {
+    const racemap = populateRacemap(inputFilePath);
+    const traversal = traverse(racemap);
+
+    const cheatsInfo = findAllCheats(racemap, traversal);
+    const cheatsCounts = getCheatsCounts(cheatsInfo);
+
+    // console.log(cheatsCounts);
+    var numTopCheats = 0;
+    for (const cheatCount of cheatsCounts) {
+        const timeSaved = cheatCount[0];
+        const numCheats = cheatCount[1];
+
+        if (timeSaved >= timeThresh) numTopCheats += numCheats;
+    }
+    
+    console.log(`There are ${numTopCheats} cheats that save at least ${timeThresh} picoseconds:\n`);
+    cheatsCounts.forEach(logNumCheats);
+}
+
+// solve('./test.txt', 40);
+solve('./input.txt', 100);
