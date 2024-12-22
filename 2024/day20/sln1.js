@@ -1,6 +1,3 @@
-const { log } = require('node:console');
-const { deflateRawSync } = require('node:zlib');
-
 const CHEAT_EXPENSE = 2;
 
 // Reads from file input and stores racetrack in 2d array
